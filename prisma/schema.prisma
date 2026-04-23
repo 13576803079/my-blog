@@ -59,6 +59,8 @@ model Post {
   coverImage String?
   // 是否已发布（false = 草稿，true = 已发布）
   published Boolean  @default(false)
+  // 浏览次数
+  views     Int      @default(0)
   // 创建时间
   createdAt DateTime @default(now())
   // 更新时间
