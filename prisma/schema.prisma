@@ -1,0 +1,127 @@
+/**
+ * Prisma 数据模型定义
+ *
+ * 这个文件定义了数据库的所有表结构。
+ * 修改后需要运行 npx prisma migrate dev 来同步到数据库。
+ *
+ * 模型关系：
+ *   User  1 --- N Post     （一个用户可以有多篇文章）
+ *   Post  1 --- N Comment  （一篇文章可以有多条评论）
+ *   User  1 --- N Comment  （一个用户可以有多条评论）
+ *   Post  N --- N Tag      （多对多：文章可以有多个标签，标签属于多篇文章）
+ *
+ * SQLite 适合学习和开发，生产环境建议换 PostgreSQL。
+ */
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// 用户表 - 存储注册用户信息
+model User {
+  id        String   @id @default(cuid())
+  // 用户名 - 用于显示，唯一
+  name      String
+  // 邮箱 - 用于登录，唯一
+  email     String   @unique
+  // 密码 - 存储 bcrypt 哈希值，不是明文！
+  password  String
+  // 头像地址（可选）
+  image     String?
+  // 个人简介（可选）
+  bio       String?
+  // 创建时间
+  createdAt DateTime @default(now())
+  // 更新时间（每次修改自动更新）
+  updatedAt DateTime @updatedAt
+
+  // 一个用户可以有多篇文章（一对多关系）
+  posts Post[]
+  // 一个用户可以有多条评论
+  comments Comment[]
+  // 一个用户可以有自己的标签
+  tags Tag[]
+}
+
+/// 文章表 - 存储博客文章
+model Post {
+  id        String   @id @default(cuid())
+  // 文章标题
+  title     String
+  // 文章内容（用 Markdown 格式存储）
+  content   String
+  // 封面图片地址（可选）
+  coverImage String?
+  // 是否已发布（false = 草稿，true = 已发布）
+  published Boolean  @default(false)
+  // 创建时间
+  createdAt DateTime @default(now())
+  // 更新时间
+  updatedAt DateTime @updatedAt
+
+  // 文章所属用户的 ID（外键）
+  authorId String
+  // 关联到 User 模型（多对一：多篇文章属于一个用户）
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // 一篇文章可以有多条评论（一对多关系）
+  // onDelete: Cascade 表示删除文章时自动删除其所有评论
+  comments Comment[]
+  // 多对多：一篇文章可以有多个标签
+  tags Tag[]
+}
+
+/// 评论表 - 存储文章评论（支持嵌套回复）
+model Comment {
+  id        String   @id @default(cuid())
+  // 评论内容
+  content   String
+  // 创建时间
+  createdAt DateTime @default(now())
+  // 更新时间
+  updatedAt DateTime @updatedAt
+
+  // 评论所属文章的 ID（外键）
+  postId String
+  // 关联到 Post 模型
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // 评论者的用户 ID（外键）
+  authorId String
+  // 关联到 User 模型
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // 回复的父评论 ID（可选，null 表示是顶级评论）
+  parentId String?
+  // 关联到父评论（自引用一对多：一条评论可以有多条回复）
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  // 该评论的所有回复
+  replies  Comment[] @relation("CommentReplies")
+}
+
+/// 标签表 - 文章分类标签（用户私有）
+/// 多对多关系：一个标签可以属于多篇文章，一篇文章可以有多个标签
+/// 每个用户有自己的一套标签，不同用户可以有同名标签
+model Tag {
+  id        String   @id @default(cuid())
+  // 标签名称（同一用户下唯一）
+  name      String
+  // 标签颜色（可选，用于前端显示不同颜色的标签）
+  color     String   @default("#3B82F6")
+  createdAt DateTime @default(now())
+
+  // 标签所属用户（标签是用户私有的）
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // 同一用户下标签名唯一（不同用户可以有同名标签）
+  @@unique([authorId, name])
+
+  // 多对多：一个标签属于多篇文章
+  posts Post[]
+}
