@@ -10,8 +10,8 @@ import type { MetadataRoute } from "next";
 
 // 前端基础 URL（用于生成 sitemap 中的 URL）
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-// 后端 API 基础地址
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+// 服务端渲染时优先使用 Docker 内部网络
+const API_URL = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 从 NestJS 后端获取所有已发布文章

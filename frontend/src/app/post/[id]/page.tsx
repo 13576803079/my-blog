@@ -26,8 +26,8 @@ import { notFound } from "next/navigation";
 import { extractHeadings } from "@/lib/extract-headings";
 import type { Metadata } from "next";
 
-// 后端 API 基础地址
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+// 服务端渲染时优先使用 Docker 内部网络（不经 Nginx，更快）
+const API_URL = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 /** 文章详情数据类型 */
 interface PostDetail {

@@ -36,7 +36,8 @@ export class UploadController {
         // 保存到 frontend/public/uploads/（Next.js 从 frontend/public/ 提供静态文件）
         // 使用绝对路径，从项目根目录解析
         destination: (req, file, cb) => {
-          const uploadPath = join(process.cwd(), '..', 'frontend', 'public', 'uploads');
+          // Docker 部署时通过 UPLOAD_DIR 指定路径，本地开发用默认路径
+          const uploadPath = process.env.UPLOAD_DIR || join(process.cwd(), '..', 'frontend', 'public', 'uploads');
           // 确保目录存在
           const fs = require('fs');
           fs.mkdirSync(uploadPath, { recursive: true });

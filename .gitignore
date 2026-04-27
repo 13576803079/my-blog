@@ -47,3 +47,8 @@ public/uploads/
 
 # database
 dev.db
+
+# Docker 部署数据（不提交到 git）
+data/
+backups/
+.env
